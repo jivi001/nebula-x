@@ -7,8 +7,16 @@ const planets = [
   { id: 'Deep Space', label: 'Deep space', icon: Telescope, count: 6, note: 'The travelers still moving outward' },
 ];
 
+const solarBodies = [
+  { id: 'Sun', label: 'Sun', type: 'star', description: 'The anchor of our planetary system.' },
+  { id: 'Earth', label: 'Earth', type: 'earth', description: 'Home base, with one natural satellite.', chapter: 'Moon' },
+  { id: 'Moon', label: 'Moon', type: 'moon', description: 'Our nearest neighbor and the first world we explored.', chapter: 'Moon' },
+  { id: 'Mars', label: 'Mars', type: 'mars', description: 'The red planet, one step beyond Earth.', chapter: 'Mars' },
+];
+
 export default function PlanetSelector({ selectedBody, onSelect }) {
   const [isNarrating, setIsNarrating] = useState(false);
+  const [selectedObject, setSelectedObject] = useState(selectedBody === 'Mars' ? 'Mars' : 'Moon');
 
   const handleIntroNarration = () => {
     if (!('speechSynthesis' in window)) return;
@@ -24,6 +32,13 @@ export default function PlanetSelector({ selectedBody, onSelect }) {
     synth.speak(utterance);
     setIsNarrating(true);
   };
+
+  const handleBodySelect = (body) => {
+    setSelectedObject(body.id);
+    if (body.chapter) onSelect(body.chapter);
+  };
+
+  const selected = solarBodies.find((body) => body.id === selectedObject) || solarBodies[2];
 
   return (
     <header className="explorer">
@@ -47,6 +62,33 @@ export default function PlanetSelector({ selectedBody, onSelect }) {
         </div>
       </div>
 
+      <section className="solar-system" aria-labelledby="solar-system-heading">
+        <div className="solar-system-heading">
+          <div>
+            <p className="hero-kicker">Interactive map</p>
+            <h2 id="solar-system-heading">Choose a world</h2>
+          </div>
+          <p>Drag your attention outward: the Moon circles Earth, Earth circles the Sun, and Mars waits next door.</p>
+        </div>
+        <div className="solar-stage">
+          <div className="solar-orbit solar-orbit-earth" aria-hidden="true" />
+          <div className="solar-orbit solar-orbit-mars" aria-hidden="true" />
+          <button type="button" className={`celestial-body body-sun ${selectedObject === 'Sun' ? 'selected' : ''}`} onClick={() => handleBodySelect(solarBodies[0])} aria-label="Select the Sun" aria-pressed={selectedObject === 'Sun'}><span /></button>
+          <button type="button" className={`celestial-body body-earth ${selectedObject === 'Earth' ? 'selected' : ''}`} onClick={() => handleBodySelect(solarBodies[1])} aria-label="Select Earth" aria-pressed={selectedObject === 'Earth'}><span /></button>
+          <div className="moon-orbit"><button type="button" className={`celestial-body body-moon ${selectedObject === 'Moon' ? 'selected' : ''}`} onClick={() => handleBodySelect(solarBodies[2])} aria-label="Select the Moon" aria-pressed={selectedObject === 'Moon'}><span /></button></div>
+          <button type="button" className={`celestial-body body-mars ${selectedObject === 'Mars' ? 'selected' : ''}`} onClick={() => handleBodySelect(solarBodies[3])} aria-label="Select Mars" aria-pressed={selectedObject === 'Mars'}><span /></button>
+          <div className="body-label label-sun">Sun</div>
+          <div className="body-label label-earth">Earth</div>
+          <div className="body-label label-moon">Moon</div>
+          <div className="body-label label-mars">Mars</div>
+        </div>
+        <div className="solar-selection" aria-live="polite">
+          <span className={`selection-dot dot-${selected.type}`} aria-hidden="true" />
+          <div><strong>{selected.label}</strong><span>{selected.description}</span></div>
+          <span className="selection-hint">Select a body to explore</span>
+        </div>
+      </section>
+
       <div className="selector-wrap">
         <div className="selector-heading">
           <h2>Choose a chapter</h2>
@@ -58,7 +100,7 @@ export default function PlanetSelector({ selectedBody, onSelect }) {
               type="button"
               key={id}
               className={`planet-tab ${selectedBody === id ? 'active' : ''}`}
-              onClick={() => onSelect(id)}
+              onClick={() => { setSelectedObject(id === 'Mars' ? 'Mars' : 'Moon'); onSelect(id); }}
               aria-pressed={selectedBody === id}
               title={`${note}. ${count} artifacts.`}
             >
